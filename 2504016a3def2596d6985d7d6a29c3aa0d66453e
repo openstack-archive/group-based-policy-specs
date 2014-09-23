@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Ronak Shah <ronak.malav.shah@gmail.com>
+Workflow+1: Ronak Shah <ronak.malav.shah@gmail.com>
+Code-Review+2: Stephen Wong <stephen.kf.wong@gmail.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 23 Sep 2014 20:33:32 +0000
+Reviewed-on: https://review.openstack.org/123494
+Project: stackforge/group-based-policy-specs
+Branch: refs/heads/master
