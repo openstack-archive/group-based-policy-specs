@@ -10,7 +10,7 @@ Group-based Policy Abstractions for Neutron
 
 Launchpad blueprint:
 
-https://blueprints.launchpad.net/neutron/+spec/group-based-policy-abstraction
+https://blueprints.launchpad.net/group-based-policy/+spec/group-based-policy-abstraction
 
 This blueprint proposes an extension to the Neutron API with a declarative
 policy driven connectivity model that presents simplified application-oriented
