@@ -226,8 +226,8 @@ latex_documents = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'Group-based-policy-specs', u'Group baed Policy Design Specs',
-   u'Group Based Policy Team', 'group-based-policy-specs', 'Design
-specifications for the Group Based Policy project.', 'Miscellaneous'),
+   u'Group Based Policy Team', 'group-based-policy-specs', 'Design '
+   'specifications for the Group Based Policy project.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
