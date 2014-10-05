@@ -8,7 +8,7 @@ Juno approved specs:
 
 .. toctree::
    :glob:
-   :maxdepth: 1
+   :maxdepth: 2
 
    specs/juno/*
 
