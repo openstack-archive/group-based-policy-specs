@@ -28,7 +28,6 @@ import os
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.intersphinx',
               'sphinx.ext.todo',
               'sphinx.ext.viewcode',
               'sphinxcontrib.blockdiag',
@@ -225,9 +224,8 @@ latex_documents = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Group-based-policy-specs', u'Group baed Policy Design Specs',
-   u'Group Based Policy Team', 'group-based-policy-specs', 'Design
-specifications for the Group Based Policy project.', 'Miscellaneous'),
+  ('index', 'Group-based-policy-specs', 'Group baed Policy Design Specs',
+   'Group Based Policy Team', 'group-based-policy-specs', 'Design specifications for the Group Based Policy project.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
