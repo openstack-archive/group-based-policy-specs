@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+1: Subrahmanyam Ongole <songole@oneconvergence.com>
+Code-Review+2: Ivar Lazzaro <ivarlazzaro@gmail.com>
+Workflow+1: Ivar Lazzaro <ivarlazzaro@gmail.com>
+Code-Review+2: Stephen Wong <stephen.kf.wong@gmail.com>
+Code-Review+2: Hemanth Ravi <hemanth.ravi@oneconvergence.com>
+Submitted-by: Jenkins
+Submitted-at: Mon, 06 Oct 2014 21:17:05 +0000
+Reviewed-on: https://review.openstack.org/124893
+Project: stackforge/group-based-policy-specs
+Branch: refs/heads/master
