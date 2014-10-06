@@ -8,6 +8,10 @@
 Example Spec - The title of your blueprint
 ==========================================
 
+Launchpad blueprint:
+
+https://blueprints.launchpad.net/group-based-policy/+spec/some-spec
+
 Introduction paragraph -- why are we doing anything? A single paragraph of
 prose that operators can understand.
 
