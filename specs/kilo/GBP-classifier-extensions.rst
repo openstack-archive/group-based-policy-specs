@@ -67,8 +67,8 @@ The new attributes for the Policy Classifier resource are shown below.
 |description  |string    |RW, all |''       |CRU |human-readable     |
 +-------------+----------+--------+---------+----+-------------------+
 |port_range   |List(dict)|RW, all |None     |CRU |Ranges of ports    |
-|             |          |        |         |    |[{“min”: “80”,     |
-|             |          |        |         |    |“max”: “82”}]      |
+|             |          |        |         |    |[{'min': '80',     |
+|             |          |        |         |    |'max': '82'}]      |
 +-------------+----------+--------+---------+----+-------------------+
 |protocol     |Enum      |RW, all |None     |CRU |'tcp','udp,'icmp'  |
 +-------------+----------+--------+---------+----+-------------------+
