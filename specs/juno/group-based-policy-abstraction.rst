@@ -120,6 +120,9 @@ constraints (such as no broadcast) within that L2 boundary.
 
 **Routing Domain:** Used to define a non-overlapping IP address space.
 
+**Service Policy:** Used to define policies that are used for assigning
+resources in an EPG to be consumed by network services.
+
 Here is an example of how a three tier application would look like:
 
 ::
@@ -264,22 +267,26 @@ Contract
 ContractProvidingScope
   * contract_id - uuid of the Contract that is being provided by the EPG
   * selectors - list of Selectors uuids
-  * capabilites - list of PolicyLabel uuids
+  * capabilites - list of PolicyTag uuids
   * providing_epg - EndpointGroup uuid
 
 ContractConsumingScope
   * contract_id - uuid of the Contract that is being consumed by the EPG
   * selectors - list of Selectors uuids
-  * roles - list of PolicyLabels
+  * roles - list of PolicyTags
   * consuming_epg - EndpointGroup uuid
 
 Selector
   * scope - enum: GLOBAL, TENANT, EPG
   * value - None for GLOBAL, or uuid of tenant/EPG
 
-PolicyLabel
+PolicyTag
   * namespace - string, a namespace identifier for policy labels
   * name - string, not optional
+  * values - list of PolicyTag uuids
+
+PolicyValue
+  * value - String
 
 PolicyRule
   * filter - uuid of Filter
@@ -287,8 +294,8 @@ PolicyRule
   * actions - list of Action uuids
 
 Filter
-  * provider_capablilities - list of PolicyLabel uuids
-  * consumer_roles - list of PolicyLabel uuids
+  * provider_capablilities - list of PolicyTag uuids
+  * consumer_roles - list of PolicyTag uuids
 
 Classifier
   * protocol - enum: TCP, IP, ICMP
@@ -319,6 +326,18 @@ The way ip_pool and default_subnet_prefix_length work is as follows: When
 creating L3Policy a default ip_pool and default_subnet_prefix_length are
 created. If a user creates an EPG, a subnet will be pulled from ip_pool using
 default_subnet_prefix_length.
+
+ServicePolicy
+  * endpoint_groups - list of EndpointGroup uuids
+  * address_impersonation - enum, one or many. 'one' indicates 1 to 1 mapping
+    (e.g. floating IP for each endpoint), 'many' indicates 1 to many mapping
+    (e.g. using a VIP)
+  * use_external_address - enum, true (for floating IPs), or false
+  * service_arguments - list of ServiceArgument uuids
+
+ServiceArguments
+  * name - String
+  * value - String
 
 Objects to support Mapping to existing Neutron resources
 
@@ -366,6 +385,7 @@ The following new resources are being introduced:
   POLICY_LABELS = 'policy_labels'
   L2_POLICIES = 'l2_policies'
   L3_POLICIES = 'l3_policies'
+  SERVICE_POLICIES = 'service_policies'
 
   RESOURCE_ATTRIBUTE_MAP = {
       ENDPOINTS: {
@@ -650,6 +670,11 @@ The following new resources are being introduced:
           'name': {'allow_post': True, 'allow_put': True,
                    'validate': {'type:string': None},
                    'is_visible': True, 'required': True},
+          'values': {'allow_post': True, 'allow_put': True,
+                     'default': None,
+                     'validate': {'type:uuid_list': None},
+                     'convert_to': attr.convert_none_to_empty_list,
+                     'is_visible': True},
       },
       L2_POLICIES: {
           'id': {'allow_post': False, 'allow_put': False,
@@ -704,6 +729,34 @@ The following new resources are being introduced:
                              'validate': {'type:uuid_list': None},
                              'convert_to': attr.convert_none_to_empty_list,
                              'default': None, 'is_visible': True},
+      },
+      SERVICE_POLICIES: {
+          'id': {'allow_post': False, 'allow_put': False,
+                 'validate': {'type:uuid': None}, 'is_visible': True,
+                 'primary_key': True},
+          'name': {'allow_post': True, 'allow_put': True,
+                   'validate': {'type:string': None},
+                   'default': '', 'is_visible': True},
+          'description': {'allow_post': True, 'allow_put': True,
+                          'validate': {'type:string': None},
+                          'is_visible': True, 'default': ''},
+          'tenant_id': {'allow_post': True, 'allow_put': False,
+                        'validate': {'type:string': None},
+                        'required_by_policy': True, 'is_visible': True},
+          'endpoint_groups': {'allow_post': False, 'allow_put': False,
+                              'validate': {'type:uuid_list': None},
+                              'convert_to': attr.convert_none_to_empty_list,
+                              'default': None, 'is_visible': True},
+          'address_impersonation': {'allow_post': True, 'allow_put': False,
+                                    'validate': {'type:values': ['one', 'many']},
+                                    'is_visible': True},
+          'external_address': {'allow_post': True, 'allow_put': False,
+                               'default': True, 'convert_to': attr.convert_to_boolean,
+                               'is_visible': True},
+          'service_arguments': {'allow_post': True, 'allow_put': True,
+                                'validate': {'type:uuid_list': None},
+                                'convert_to': attr.convert_none_to_empty_list,
+                                'default': None, 'is_visible': True},
       },
   }
 
