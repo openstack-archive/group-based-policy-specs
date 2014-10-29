@@ -112,13 +112,16 @@ Contract.
 **Selector:** A Contract Scope can define additional constraints around choosing
 the matching provider or consumer EPGs for a Contract via a Selector.
 
-**Policy Labels:** These are labels contained within a namespace hierarchy and
+**Policy Tags:** These are labels contained within a namespace hierarchy and
 used to define Capability and Role tags used in Filters.
 
-**Bridge Domain:** Used to define a L2 boundary and impose additional
+**L2 Policy:** Used to define a L2 boundary and impose additional
 constraints (such as no broadcast) within that L2 boundary.
 
-**Routing Domain:** Used to define a non-overlapping IP address space.
+**L3 Policy:** Used to define a non-overlapping IP address space.
+
+**Network Service Policy:** Used to define policies that are used for assigning
+resources in an EPG to be consumed by network services.
 
 Here is an example of how a three tier application would look like:
 
@@ -249,6 +252,7 @@ All objects have the following common attributes:
 
 Endpoint
   * epg_id - UUID of the EndpointGroup (EPG) that this Endpoint (EP) belongs to
+  * policy_tags - a list of PolicyTag uuids
 
 EndpointGroup
   * endpoints - list of endpoint uuids
@@ -264,22 +268,26 @@ Contract
 ContractProvidingScope
   * contract_id - uuid of the Contract that is being provided by the EPG
   * selectors - list of Selectors uuids
-  * capabilites - list of PolicyLabel uuids
+  * capabilites - list of PolicyTag uuids
   * providing_epg - EndpointGroup uuid
 
 ContractConsumingScope
   * contract_id - uuid of the Contract that is being consumed by the EPG
   * selectors - list of Selectors uuids
-  * roles - list of PolicyLabels
+  * roles - list of PolicyTags
   * consuming_epg - EndpointGroup uuid
 
 Selector
   * scope - enum: GLOBAL, TENANT, EPG
   * value - None for GLOBAL, or uuid of tenant/EPG
 
-PolicyLabel
+PolicyTag
   * namespace - string, a namespace identifier for policy labels
   * name - string, not optional
+  * values - list of PolicyValue uuids
+
+PolicyValue
+  * value - String
 
 PolicyRule
   * filter - uuid of Filter
@@ -287,8 +295,8 @@ PolicyRule
   * actions - list of Action uuids
 
 Filter
-  * provider_capablilities - list of PolicyLabel uuids
-  * consumer_roles - list of PolicyLabel uuids
+  * provider_capablilities - list of PolicyTag uuids
+  * consumer_roles - list of PolicyTag uuids
 
 Classifier
   * protocol - enum: TCP, IP, ICMP
@@ -298,10 +306,7 @@ Classifier
 Action
   * type - enum: ALLOW, REDIRECT, QOS, LOG, MARK, COPY
   * value - uuid of a resource that performs the action, for example in the
-    case of REDIRECT, its the uuid of the ServiceWrapper
-
-ServiceWrapper
-  * neutron_service - uuid of service or service_chain
+    case of REDIRECT, its the uuid of the Service Chain
 
 L2Policy
   * endpoint_groups - list of EndpointGroup uuids
@@ -319,6 +324,28 @@ The way ip_pool and default_subnet_prefix_length work is as follows: When
 creating L3Policy a default ip_pool and default_subnet_prefix_length are
 created. If a user creates an EPG, a subnet will be pulled from ip_pool using
 default_subnet_prefix_length.
+
+NetworkServicePolicy
+  * endpoint_groups - list of EndpointGroup uuids
+  * network_service_params - list of ServiceArgument uuids
+
+NetworkServiceParams
+  * type - String, enum, ip_single, ip_pool, string
+  * name - String, e.g. vip
+  * value - String, e.g. self_subnet or external_subnet when the type is
+    ip_single or ip_pool; a string value when the type is string
+    The type and value are validated, the name is treated as a literal.
+    The name of the param is chosen by the service chain implementation,
+    and as such is validated by the service chain provider.
+    The supported types are: ip_single, ip_pool, string.
+    The supported values are: self_subnet and external_subnet,
+    but the values are not validated when the tpye is 'string'.
+    Valid combinations are:
+    ip_single, self_subnet: Allocate a single IP addr from epg subnet,
+    e.g. VIP (in the private network)
+    ip_single, external_subnet: Allocate a single floating-ip addr,
+    e.g. Public address for the VIP
+    ip_pool, external_subnet: Allocate a floating-ip for every EP in EPG
 
 Objects to support Mapping to existing Neutron resources
 
@@ -363,9 +390,10 @@ The following new resources are being introduced:
   CLASSIFIERS = 'classifiers'
   ACTIONS = 'actions'
   SELECTORS = 'selectors'
-  POLICY_LABELS = 'policy_labels'
+  POLICY_TAGS = 'policy_tags'
   L2_POLICIES = 'l2_policies'
   L3_POLICIES = 'l3_policies'
+  NETWORK_SERVICE_POLICIES = 'network_service_policies'
 
   RESOURCE_ATTRIBUTE_MAP = {
       ENDPOINTS: {
@@ -402,9 +430,12 @@ The following new resources are being introduced:
                         'validate': {'type:uuid_list': None},
                         'convert_to': attr.convert_none_to_empty_list,
                         'default': None, 'is_visible': True},
-          'bridge_domain_id': {'allow_post': True, 'allow_put': True,
-                               'validate': {'type:uuid_or_none': None},
-                               'default': None, 'is_visible': True},
+          'l2_policy_id': {'allow_post': True, 'allow_put': True,
+                           'validate': {'type:uuid_or_none': None},
+                           'default': None, 'is_visible': True},
+          'network_service_policy_id': {'allow_post': True, 'allow_put': True,
+                                        'validate': {'type:uuid_or_none': None},
+                                        'default': None, 'is_visible': True},
           'provided_contract_scopes': {'allow_post': True, 'allow_put': True,
                                        'validate': {'type:uuid_list': None},
                                        'convert_to':
@@ -629,14 +660,11 @@ The following new resources are being introduced:
                     'validate': {'type:uuid_or_none': None},
                     'is_visible': True},
       },
-      POLICY_LABELS: {
+      POLICY_TAGS: {
           'id': {'allow_post': False, 'allow_put': False,
                  'validate': {'type:uuid': None},
                  'is_visible': True,
                  'primary_key': True},
-          'name': {'allow_post': True, 'allow_put': True,
-                   'validate': {'type:string': None},
-                   'default': '', 'is_visible': True},
           'description': {'allow_post': True, 'allow_put': True,
                           'validate': {'type:string': None},
                           'is_visible': True, 'default': ''},
@@ -649,7 +677,12 @@ The following new resources are being introduced:
                         'is_visible': True, 'default': ''},
           'name': {'allow_post': True, 'allow_put': True,
                    'validate': {'type:string': None},
-                   'is_visible': True, 'required': True},
+                   'required': True, 'is_visible': True},
+          'values': {'allow_post': True, 'allow_put': True,
+                     'default': None,
+                     'validate': {'type:uuid_list': None},
+                     'convert_to': attr.convert_none_to_empty_list,
+                     'is_visible': True},
       },
       L2_POLICIES: {
           'id': {'allow_post': False, 'allow_put': False,
@@ -668,10 +701,10 @@ The following new resources are being introduced:
                               'validate': {'type:uuid_list': None},
                               'convert_to': attr.convert_none_to_empty_list,
                               'default': None, 'is_visible': True},
-          'routing_domain_id': {'allow_post': True, 'allow_put': True,
-                                'validate': {'type:uuid_or_none': None},
-                                'default': None, 'is_visible': True,
-                                'required': True},
+          'l3_policy_id': {'allow_post': True, 'allow_put': True,
+                           'validate': {'type:uuid_or_none': None},
+                           'default': None, 'is_visible': True,
+                           'required': True},
       },
       L3_POLICIES: {
           'id': {'allow_post': False, 'allow_put': False,
@@ -704,6 +737,33 @@ The following new resources are being introduced:
                              'validate': {'type:uuid_list': None},
                              'convert_to': attr.convert_none_to_empty_list,
                              'default': None, 'is_visible': True},
+      },
+      NETWORK_SERVICE_POLICIES: {
+          'id': {'allow_post': False, 'allow_put': False,
+                 'validate': {'type:uuid': None}, 'is_visible': True,
+                 'primary_key': True},
+          'name': {'allow_post': True, 'allow_put': True,
+                   'validate': {'type:string': None},
+                   'default': '', 'is_visible': True},
+          'description': {'allow_post': True, 'allow_put': True,
+                          'validate': {'type:string': None},
+                          'is_visible': True, 'default': ''},
+          'tenant_id': {'allow_post': True, 'allow_put': False,
+                        'validate': {'type:string': None},
+                        'required_by_policy': True, 'is_visible': True},
+          'endpoint_groups': {'allow_post': False, 'allow_put': False,
+                              'validate': {'type:uuid_list': None},
+                              'convert_to': attr.convert_none_to_empty_list,
+                              'default': None, 'is_visible': True},
+          # A valid network_svc_params list is:
+          # [{'type': <param_type>, 'name': <param_name>, 'value':
+          # <param_value>}]
+          # e.g. [{'type': 'ip_single', 'name': 'vip', 'value': 'self_subnet'}]
+          'network_service_params': {'allow_post': True, 'allow_put': True,
+                                     'validate': {'type:list': None},
+                                     'convert_to':
+                                      attr.convert_none_to_empty_list,
+                                     'default': None, 'is_visible': True},
       },
   }
 
