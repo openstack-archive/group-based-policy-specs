@@ -27,7 +27,7 @@ to allow for more flexible selection of packet flows that are to be included
 in a Policy Rule. Each Policy Classifier in the list must have precedence
 value to define the order of evaluation.
 
-2. Each Policy Rule must have a logic_selector to specify how the 
+2. Each Policy Rule must have a logic_selector to specify how the
 classifiers are to be combined for matching. If the logic selector is set
 to OR then any of classifiers matching will cause the Policy Rule to trigger
 and its actions be executed. If the logic selector is set to AND then
