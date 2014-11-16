@@ -4,47 +4,47 @@
 
  http://creativecommons.org/licenses/by/3.0/legalcode
 
-===========================================
-Group-based Policy Abstractions for Neutron
-===========================================
+==============================================
+Group-based Policy Abstractions for Networking
+==============================================
 
 Launchpad blueprint:
 
 https://blueprints.launchpad.net/group-based-policy/+spec/group-based-policy-abstraction
 
-This blueprint proposes an extension to the Neutron API with a declarative
-policy driven connectivity model that presents simplified application-oriented
+This blueprint proposes a networking API with a declarative policy driven
+connectivity model that presents simplified application-oriented
 interfaces to the user.
 
 Problem description
 ===================
 
-The current Neutron model of networks, ports, subnets, routers, and security
-groups provides the necessary building blocks to build a logical network
-topology for connectivity. However, it does not provide the right level
+The current OpenStack networking  model of networks, ports, subnets, routers,
+and security groups provides the necessary building blocks to build a logical
+network topology for connectivity. However, it does not provide the right level
 of abstraction for an application administrator who understands the
 application's details (like application port numbers), but not the
 infrastructure details likes networks and routes. Not only that, the current
 abstraction puts the burden of maintaining the consistency of the network
 topology on the user.  The lack of application developer/administrator focussed
 abstractions supported by a declarative model make it hard for those users
-to consume Neutron as a connectivity layer.
+to consume the existing connectivity layer.
 
 Proposed change
 ===============
 
 The policy framework described in this blueprint complements the current
-Neutron model with the notion of policies that can be applied between groups of
-endpoints. As users look beyond basic connectivity, richer network services
-with diverse implementations and network properties are naturally expressed as
-policies. Examples include service chaining, QoS, path properties, access
-control, etc.
+OpenStack networking  model with the notion of policies that can be applied
+between groups of network endpoints. As users look beyond basic connectivity,
+richer network services with diverse implementations and network properties are
+naturally expressed as policies. Examples include service chaining, QoS, path
+properties, access control, etc.
 
 This proposal suggests a model that allows application administrators to
 express their networking requirements using group and policy abstractions, with
 the specifics of policy enforcement and implementation left to the underlying
 policy driver. The main advantage of the extensions described in this blueprint
-is that they allow for an application-centric interface to Neutron that
+is that they allow for an application-centric interface to OpenStack networking that
 complements the existing network-centric interface.
 
 More specifically the new abstractions will achieve the following:
@@ -75,53 +75,54 @@ More specifically the new abstractions will achieve the following:
   specific actions.
 
 * Complement the governance model proposed in the OpenStack Congress project by
-  making Policy Labels available for enforcement.
+  making Policy Tags available for enforcement.
 
 The following new terminology is being introduced:
 
-**Endpoint (EP):** An L2/L3 addressable entity.
+**Policy Target (PT):** It is the smallest unit of resource abstraction at
+which policy can be applied.
 
-**Endpoint Group (EPG):** A collection of endpoints.
+**Policy Target Group (PTG):** A collection of policy targets.
 
-**Contract:** It defines how the application services provided by an EPG can be
-accessed. In effect it specifies how an EPG communicates with other EPGs. A
-Contract consists of Policy Rules.
+**Policy Rule Set (PRS):** It defines how the application services provided by
+an PTG can be accessed. In effect it specifies how an PTG communicates with other
+PTGs. A Policy Rule Set consists of Policy Rules.
 
-**Policy Rule:** These are individual rules used to define the communication
-criteria between EPGs. Each rule contains a Filter, Classifier, and Action.
+**Policy Rule (PR):** These are individual rules used to define the communication
+criteria between PTGs. Each rule contains a Filter, Classifier, and Action.
 
 **Classifier:** Characterizes the traffic that a particular Policy Rule acts on.
 Corresponding action is taken on traffic that satisfies this classification
 criteria.
 
 **Action:** The action that is taken for a matching Policy Rule defined in a
-Contract.
+Policy Rule Set.
 
-**Filter:** Provides a way to tag a Policy Rule with Capability and Role labels.
+**Filter:** Provides a way to tag a Policy Rule with Capability and Role tags.
 
-**Capability:** It is a Policy Label that defines what part of a Contract a
-particular EPG provides.
+**Capability:** It is a Policy Label that defines what part of a Policy Rule Set a
+particular PTG provides.
 
-**Role:** It is a Policy Label that defines what part of a Contract an EPG wants
+**Role:** It is a Policy Label that defines what part of a Policy Rule Set an PTG wants
 to consume.
 
-**Contract Scope:** An EPG conveys its intent to provide or consume a Contract
-(or its part) by defining a Contract Scope which references the target
-Contract.
+**Policy Rule Set Scope:** An PTG conveys its intent to provide or consume a Policy Rule Set
+(or its part) by defining a Policy Rule Set Scope which references the target
+Policy Rule Set.
 
-**Selector:** A Contract Scope can define additional constraints around choosing
-the matching provider or consumer EPGs for a Contract via a Selector.
+**Selector:** A Policy Rule Set Scope can define additional constraints around choosing
+the matching provider or consumer PTGs for a Policy Rule Set via a Selector.
 
 **Policy Tags:** These are labels contained within a namespace hierarchy and
 used to define Capability and Role tags used in Filters.
 
-**L2 Policy:** Used to define a L2 boundary and impose additional
+**L2 Policy (L2P):** Used to define a L2 boundary and impose additional
 constraints (such as no broadcast) within that L2 boundary.
 
-**L3 Policy:** Used to define a non-overlapping IP address space.
+**L3 Policy (L3P):** Used to define a non-overlapping IP address space.
 
-**Network Service Policy:** Used to define policies that are used for assigning
-resources in an EPG to be consumed by network services.
+**Network Service Policy (NSP):** Used to define policies that are used for
+assigning resources in an PTG to be consumed by network services.
 
 Here is an example of how a three tier application would look like:
 
@@ -129,10 +130,10 @@ Here is an example of how a three tier application would look like:
 
  +–––––––––+          +–––––––+          +–––––––+          +–––––––+
  |         |          | Web   |          | App   |          |DB     |
- | Outside |          | EPG   |          | EPG   |          |EPG    |
+ | Outside |          | PTG   |          | PTG   |          |PTG    |
  | Public  | +––––––––+  +––+ | +––––––––+  +––+ | +––––––––+  +––+ |
  | Network +–+Web     |  |VM| +–+App     |  |VM| +–+DB      |  |VM| |
- | EPG     | |Contract|  +––+ | |Contract|  +––+ | |Contract|  +––+ |
+ | PTG     | |PRS     |  +––+ | |PRS     |  +––+ | |PRS     |  +––+ |
  |         | +––––––––+       | +––––––––+       | +––––––––+       |
  |         |          |  +––+ |          |  +––+ |          |  +––+ |
  |         |          |  |VM| |          |  |VM| |          |  |VM| |
@@ -150,65 +151,65 @@ Create Classifier
  neutron classifier-create Insecure-Web-Access --port 80 --protocol TCP
  --direction IN
 
-Create Contract using the Classifier
+Create Policy Rule Set using the Classifier
 
 ::
 
- neutron contract-create Web-Server-Contract --classifier Insecure-Web-Access
+ neutron policy-rule-set-create Web-Server-PRS --classifier Insecure-Web-Access
  --action ALLOW
 
-Create EPG providing the Contract
+Create PTG providing the Policy Rule Set
 
 ::
 
- neutron epg-create Web-Server-EPG --provides-contract Web-Server-Contract
+ neutron ptg-create Web-Server-PTG --provides-policy-rule-set Web-Server-PRS
 
-Create Endpoint in EPG
-
-::
-
- neutron ep-create --epg Web-Server-EPG
-
-Launch Web Server VM using Endpoint in EPG
+Create PT in PTG
 
 ::
 
- nova boot --image cirros --flavor m1.nano --nic port-id=<EP-NAME> Web-Server
+ neutron pt-create --epg Web-Server-PTG
+
+Launch Web Server VM using PT in PTG
+
+::
+
+ nova boot --image cirros --flavor m1.nano --nic port-id=<PT-NAME> Web-Server
 
 Specify connectivity of Outside world VMs to Web Server
 
 ::
 
- neutron epg-create Outside-EPG --consumes-contract Web-Server-Contract
+ neutron ptg-create Outside-PTG --consumes-policy-rule-set Web-Server-PRS
 
-Note that the Contract Provider/Consuming Scopes are not explicitly shown in
+Note that the Policy Rule Set Provider/Consuming Scopes are not explicitly shown in
 the above diagram but define each providing and consuming relation between an
-EPG and a Contract as shown below:
+PTG and a Policy Rule Set as shown below:
 
 ::
 
          +––––––––––+
          |Web       |
-         |Contract  |
+         |PRS       |
          |Consuming |
          |Scope     |
          +–––+––––––+
  +–––––––––+ |               +––––––––––+
  |         | |               | Web      |
- | Outside | |               | EPG      |
+ | Outside | |               | PTG      |
  | Public  | | +––––––––+    |  +––+    |
- | Network +–+–+Web     +––+–+  |VM|EP  |
- | EPG     |   |Contract|  | |  +––+    |
+ | Network +–+–+Web     +––+–+  |VM|PT  |
+ | PTG     |   |PRS     |  | |  +––+    |
  |         |   +––––––––+  | |          |
  |         |               | |  +––+    |
- |         |               | |  |VM|EP  |
+ |         |               | |  |VM|PT  |
  |         |               | |  +––+    |
  +–––––––––+               | |          |
                            | +––––––––––+
                            +
                       +––––+–––––+
                       |Web       |
-                      |Contract  |
+                      |PRS       |
                       |Providing |
                       |Scope     |
                       +––––––––––+
@@ -227,16 +228,16 @@ New Database Objects to support Group Policy:
 ::
 
  +–––––––––––––+     +–––––––––––––––+      +–––––––––––+
- |             |     |   Contract    |      |Contracts  |
- |   Endpoint  |     |   Providing/  |      |           |
- |   Groups    +–––––+   Consuming   +––––––+           |
+ |   Policy    |     |   PRS         |      |  Policy   |
+ |   Target    |     |   Providing/  |      |  Rule     |
+ |   Groups    +–––––+   Consuming   +––––––+  Sets(PRS)|
  |             |     |   Scopes      |      +–––––+–––––+
  +––––––+––––––+     +–––––––––––––––+            |
         |                                   +–––––+–––––+
-        |                                   |Policy     |
- +––––––+––––––+                            |Rules      |
- |             |                            |           |
- |  Endpoints  |                      +–––––+––––––+––––+––––––––+
+        |                                   |  Policy   |
+ +––––––+––––––+                            |  Rules    |
+ |  Policy     |                            |           |
+ |  Targets    |                      +–––––+––––––+––––+––––––––+
  |             |                      |            |             |
  +–––––––––––––+                      |            |             |
                                       |            |             |
@@ -250,39 +251,39 @@ All objects have the following common attributes:
   * name - optional name
   * description - optional annotation
 
-Endpoint
-  * epg_id - UUID of the EndpointGroup (EPG) that this Endpoint (EP) belongs to
+PolicyTarget
+  * ptg_id - UUID of the PolicyTargetGroup (PTG) that this PolicyTarget (PT) belongs to
   * policy_tags - a list of PolicyTag uuids
 
-EndpointGroup
-  * endpoints - list of endpoint uuids
-  * contract_providing_scopes - list of ContractProvidingScope uuids
-  * contract_consuming_scopes - list of ContractConsumingScope uuids
+PolicyTargetGroup
+  * policy_targets - list of PolicyTarget uuids
+  * policy_rule_set_providing_scopes - list of PolicyRuleSetProvidingScope uuids
+  * policy_rule_set_consuming_scopes - list of PolicyRuleSetConsumingScope uuids
 
-Contract
+PolicyRuleSet
   * policy_rules - ordered list of PolicyRule uuids
-  * contract_providing_scopes - list of ContractProvidingScope uuids
-  * contract_consuming_scopes - list of ContractConsumingScope uuids
-  * child_contracts - ordered list of Contract uuids
+  * policy_rule_set_providing_scopes - list of PolicyRuleSetProvidingScope uuids
+  * policy_rule_set_consuming_scopes - list of PolicyRuleSetConsumingScope uuids
+  * child_policy_rule_sets - ordered list of PolicyRuleSet uuids
 
-ContractProvidingScope
-  * contract_id - uuid of the Contract that is being provided by the EPG
+PolicyRuleSetProvidingScope
+  * policy_rule_set_id - uuid of the PolicyRuleSet that is being provided by the PTG
   * selectors - list of Selectors uuids
   * capabilites - list of PolicyTag uuids
-  * providing_epg - EndpointGroup uuid
+  * providing_ptg - PolicyTargetGroup uuid
 
-ContractConsumingScope
-  * contract_id - uuid of the Contract that is being consumed by the EPG
+PolicyRuleSetConsumingScope
+  * policy_rule_set_id - uuid of the PolicyRuleSet that is being consumed by the PTG
   * selectors - list of Selectors uuids
   * roles - list of PolicyTags
-  * consuming_epg - EndpointGroup uuid
+  * consuming_ptg - PolicyTargetGroup uuid
 
 Selector
-  * scope - enum: GLOBAL, TENANT, EPG
-  * value - None for GLOBAL, or uuid of tenant/EPG
+  * scope - enum: GLOBAL, TENANT, PTG
+  * value - None for GLOBAL, or uuid of tenant/PTG
 
 PolicyTag
-  * namespace - string, a namespace identifier for policy labels
+  * namespace - string, a namespace identifier for policy tags
   * name - string, not optional
   * values - list of PolicyValue uuids
 
@@ -309,24 +310,24 @@ Action
     case of REDIRECT, its the uuid of the Service Chain
 
 L2Policy
-  * endpoint_groups - list of EndpointGroup uuids
+  * policy_target_groups - list of PolicyTargetGroup uuids
   * l3_policy_id - uuid of the l3_policy
 
 L3Policy
   * l2_policies - list of L2Policy uuids
   * ip_version - enum, v4 or v6
   * ip_pool - string, IPSubnet with mask, used to pull subnets from if the
-    user creates an EPG without specifying a subnet
-  * default_subnet_prefix_length - int, used as the default subnet length if
-    the user creates an EPG without a subnet
+    user creates an PTG without specifying a subnet
+  * subnet_prefix_length - int, used as the default subnet length if
+    the user creates an PTG without a subnet
 
-The way ip_pool and default_subnet_prefix_length work is as follows: When
+The way ip_pool and subnet_prefix_length work is as follows: When
 creating L3Policy a default ip_pool and default_subnet_prefix_length are
-created. If a user creates an EPG, a subnet will be pulled from ip_pool using
+created. If a user creates an PTG, a subnet will be pulled from ip_pool using
 default_subnet_prefix_length.
 
 NetworkServicePolicy
-  * endpoint_groups - list of EndpointGroup uuids
+  * policy_target_groups - list of PolicyTargetGroup uuids
   * network_service_params - list of ServiceArgument uuids
 
 NetworkServiceParams
@@ -341,18 +342,18 @@ NetworkServiceParams
     The supported values are: self_subnet and external_subnet,
     but the values are not validated when the tpye is 'string'.
     Valid combinations are:
-    ip_single, self_subnet: Allocate a single IP addr from epg subnet,
+    ip_single, self_subnet: Allocate a single IP addr from ptg subnet,
     e.g. VIP (in the private network)
     ip_single, external_subnet: Allocate a single floating-ip addr,
     e.g. Public address for the VIP
-    ip_pool, external_subnet: Allocate a floating-ip for every EP in EPG
+    ip_pool, external_subnet: Allocate a floating-ip for every PT in PTG
 
 Objects to support Mapping to existing Neutron resources
 
-EndpointPortBinding (extends Endpoint)
-  * neutron_port_id - uuid of Neutron Port that this EP maps to
+PolicyTargetPortBinding (extends PolicyTarget)
+  * neutron_port_id - uuid of Neutron Port that this PT maps to
 
-EndpointGroupNetworkBinding (extends EndpointGroup)
+PolicyTargetGroupNetworkBinding (extends PolicyTargetGroup)
   * neutron_subnets - list of Neutron Subnet uuids
 
 L2PolicyBinding (extends l2_policy)
@@ -378,13 +379,13 @@ The following new resources are being introduced:
   gp_supported_actions = [None, 'ALLOW', 'REDIRECT']
   gp_supported_directions = [None, 'IN', 'OUT', 'BI']
   gp_supported_protocols = [None, 'TCP', 'UDP', 'ICMP']
-  gp_supported_scopes = [None, 'GLOBAL', 'TENANT', 'EPG']
+  gp_supported_scopes = [None, 'GLOBAL', 'TENANT', 'PTG']
 
-  ENDPOINTS = 'endpoints'
-  ENDPOINT_GROUPS = 'endpoint_groups'
-  CONTRACTS = 'contracts'
-  CONTRACT_PROVIDING_SCOPES = 'contract_providing_scopes'
-  CONTRACT_CONSUMING_SCOPES = 'contract_consuming_scopes'
+  POLICY_TARGETS = 'policy_targets'
+  POLICY_TARGET_GROUPS = 'policy_target_groups'
+  POLICY_RULE_SETS = 'policy_rule_sets'
+  POLICY_RULE_SET_PROVIDING_SCOPES = 'policy_rule_set_providing_scopes'
+  POLICY_RULE_SET_CONSUMING_SCOPES = 'policy_rule_set_consuming_scopes'
   POLICY_RULES = 'policy_rules'
   FILTERS = 'filters'
   CLASSIFIERS = 'classifiers'
@@ -396,7 +397,7 @@ The following new resources are being introduced:
   NETWORK_SERVICE_POLICIES = 'network_service_policies'
 
   RESOURCE_ATTRIBUTE_MAP = {
-      ENDPOINTS: {
+      POLICY_TARGETS: {
           'id': {'allow_post': False, 'allow_put': False,
                  'validate': {'type:uuid': None}, 'is_visible': True,
                  'primary_key': True},
@@ -409,11 +410,11 @@ The following new resources are being introduced:
           'tenant_id': {'allow_post': True, 'allow_put': False,
                         'validate': {'type:string': None},
                         'required_by_policy': True, 'is_visible': True},
-          'endpointgroup_id': {'allow_post': True, 'allow_put': True,
-                               'validate': {'type:uuid__or_none': None},
-                               'required': True, 'is_visible': True},
+          'policy_target_group_id': {'allow_post': True, 'allow_put': True,
+                                     'validate': {'type:uuid__or_none': None},
+                                     'required': True, 'is_visible': True},
       },
-      ENDPOINT_GROUPS: {
+      POLICY_TARGET_GROUPS: {
           'id': {'allow_post': False, 'allow_put': False,
                  'validate': {'type:uuid': None}, 'is_visible': True,
                  'primary_key': True},
@@ -426,28 +427,28 @@ The following new resources are being introduced:
           'tenant_id': {'allow_post': True, 'allow_put': False,
                         'validate': {'type:string': None},
                         'required_by_policy': True, 'is_visible': True},
-          'endpoints': {'allow_post': False, 'allow_put': False,
-                        'validate': {'type:uuid_list': None},
-                        'convert_to': attr.convert_none_to_empty_list,
-                        'default': None, 'is_visible': True},
+          'policy_targets': {'allow_post': False, 'allow_put': False,
+                             'validate': {'type:uuid_list': None},
+                             'convert_to': attr.convert_none_to_empty_list,
+                             'default': None, 'is_visible': True},
           'l2_policy_id': {'allow_post': True, 'allow_put': True,
                            'validate': {'type:uuid_or_none': None},
                            'default': None, 'is_visible': True},
           'network_service_policy_id': {'allow_post': True, 'allow_put': True,
                                         'validate': {'type:uuid_or_none': None},
                                         'default': None, 'is_visible': True},
-          'provided_contract_scopes': {'allow_post': True, 'allow_put': True,
-                                       'validate': {'type:uuid_list': None},
-                                       'convert_to':
-                                        attr.convert_none_to_empty_list,
-                                        'default': None, 'is_visible': True},
-          'consumed_contract_scopes': {'allow_post': True, 'allow_put': True,
-                                       'validate': {'type:uuid_list': None},
-                                       'convert_to':
-                                       attr.convert_none_to_empty_list,
-                                       'default': None, 'is_visible': True},
+          'provided_policy_rule_set_scopes': {'allow_post': True, 'allow_put': True,
+                                              'validate': {'type:uuid_list': None},
+                                              'convert_to':
+                                              attr.convert_none_to_empty_list,
+                                              'default': None, 'is_visible': True},
+          'consumed_policy_rule_set_scopes': {'allow_post': True, 'allow_put': True,
+                                              'validate': {'type:uuid_list': None},
+                                              'convert_to':
+                                              attr.convert_none_to_empty_list,
+                                              'default': None, 'is_visible': True},
       },
-      CONTRACTS: {
+      POLICY_RULE_SETS: {
           'id': {'allow_post': False, 'allow_put': False,
                  'validate': {'type:uuid': None},
                  'is_visible': True,
@@ -463,18 +464,18 @@ The following new resources are being introduced:
                         'validate': {'type:string': None},
                         'required_by_policy': True,
                         'is_visible': True},
-          'child_contracts': {'allow_post': True, 'allow_put': True,
-                              'default': None,
-                              'validate': {'type:uuid_list': None},
-                              'convert_to': attr.convert_none_to_empty_list,
-                              'required': True, 'is_visible': True},
+          'child_policy_rule_sets': {'allow_post': True, 'allow_put': True,
+                                     'default': None,
+                                     'validate': {'type:uuid_list': None},
+                                     'convert_to': attr.convert_none_to_empty_list,
+                                     'required': True, 'is_visible': True},
           'policy_rules': {'allow_post': True, 'allow_put': True,
                            'default': None,
                            'validate': {'type:uuid_list': None},
                            'convert_to': attr.convert_none_to_empty_list,
                            'required': True, 'is_visible': True},
       },
-      CONTRACT_PROVIDING_SCOPES: {
+      POLICY_RULE_SET_PROVIDING_SCOPES: {
           'id': {'allow_post': False, 'allow_put': False,
                  'validate': {'type:uuid': None},
                  'is_visible': True,
@@ -490,12 +491,12 @@ The following new resources are being introduced:
                         'validate': {'type:string': None},
                         'required_by_policy': True,
                         'is_visible': True},
-          'endpointgroup_id': {'allow_post': True, 'allow_put': True,
-                               'validate': {'type:uuid': None},
-                               'required': True, 'is_visible': True},
-          'contract_id': {'allow_post': True, 'allow_put': True,
-                          'validate': {'type:uuid': None},
-                          'required': True, 'is_visible': True},
+          'policy_target_group_id': {'allow_post': True, 'allow_put': True,
+                                     'validate': {'type:uuid': None},
+                                     'required': True, 'is_visible': True},
+          'policy_rule_set_id': {'allow_post': True, 'allow_put': True,
+                                 'validate': {'type:uuid': None},
+                                 'required': True, 'is_visible': True},
           'selector_id': {'allow_post': True, 'allow_put': True,
                           'validate': {'type:uuid_or_none': None},
                           'required': True, 'is_visible': True},
@@ -505,7 +506,7 @@ The following new resources are being introduced:
                            'convert_to': attr.convert_none_to_empty_list,
                            'required': True, 'is_visible': True},
       },
-      CONTRACT_CONSUMING_SCOPES: {
+      POLICY_RULE_SET_CONSUMING_SCOPES: {
           'id': {'allow_post': False, 'allow_put': False,
                  'validate': {'type:uuid': None},
                  'is_visible': True, 'primary_key': True},
@@ -520,12 +521,12 @@ The following new resources are being introduced:
                         'validate': {'type:string': None},
                         'required_by_policy': True,
                         'is_visible': True},
-          'endpointgroup_id': {'allow_post': True, 'allow_put': True,
-                               'validate': {'type:uuid': None},
-                               'required': True, 'is_visible': True},
-          'contract_id': {'allow_post': True, 'allow_put': True,
-                          'validate': {'type:uuid': None},
-                          'required': True, 'is_visible': True},
+          'policy_target_group_id': {'allow_post': True, 'allow_put': True,
+                                     'validate': {'type:uuid': None},
+                                     'required': True, 'is_visible': True},
+          'policy_rule_set_id': {'allow_post': True, 'allow_put': True,
+                                 'validate': {'type:uuid': None},
+                                 'required': True, 'is_visible': True},
           'selector_id': {'allow_post': True, 'allow_put': True,
                           'validate': {'type:uuid_or_none': None},
                           'required': True, 'is_visible': True},
@@ -697,10 +698,10 @@ The following new resources are being introduced:
           'tenant_id': {'allow_post': True, 'allow_put': False,
                         'validate': {'type:string': None},
                         'required_by_policy': True, 'is_visible': True},
-          'endpoint_groups': {'allow_post': False, 'allow_put': False,
-                              'validate': {'type:uuid_list': None},
-                              'convert_to': attr.convert_none_to_empty_list,
-                              'default': None, 'is_visible': True},
+          'policy_target_groups': {'allow_post': False, 'allow_put': False,
+                                   'validate': {'type:uuid_list': None},
+                                   'convert_to': attr.convert_none_to_empty_list,
+                                   'default': None, 'is_visible': True},
           'l3_policy_id': {'allow_post': True, 'allow_put': True,
                            'validate': {'type:uuid_or_none': None},
                            'default': None, 'is_visible': True,
@@ -724,19 +725,19 @@ The following new resources are being introduced:
                          'validate': {'type:values': [4, 6]},
                          'is_visible': True},
           'ip_pool': {'allow_post': True, 'allow_put': False,
-                          'validate': {'type:subnet': None},
-                          'default': '10.0.0.0/8', 'is_visible': True},
-          'default_subnet_prefix_length': {'allow_post': True, 'allow_put': True,
-                          'convert_to': attr.convert_to_int,
-                          'validate': {
-                              # ipv4 specific validation is
-                              # performed in the plugin code.
-                              'type:values': range(1, 127)},
-                          'default': 24, 'is_visible': True},
+                      'validate': {'type:subnet': None},
+                      'default': '10.0.0.0/8', 'is_visible': True},
+          'subnet_prefix_length': {'allow_post': True, 'allow_put': True,
+                                   'convert_to': attr.convert_to_int,
+                                   'validate': {
+                                   # for ipv4 legal values are 2 to 30
+                                   # for ipv6 legal values are 2 to 127
+                                   'type:values': range(1, 127)},
+                                   'default': 24, 'is_visible': True},
           'l2_policies': {'allow_post': False, 'allow_put': False,
-                             'validate': {'type:uuid_list': None},
-                             'convert_to': attr.convert_none_to_empty_list,
-                             'default': None, 'is_visible': True},
+                          validate': {'type:uuid_list': None},
+                          'convert_to': attr.convert_none_to_empty_list,
+                          'default': None, 'is_visible': True},
       },
       NETWORK_SERVICE_POLICIES: {
           'id': {'allow_post': False, 'allow_put': False,
@@ -751,7 +752,7 @@ The following new resources are being introduced:
           'tenant_id': {'allow_post': True, 'allow_put': False,
                         'validate': {'type:string': None},
                         'required_by_policy': True, 'is_visible': True},
-          'endpoint_groups': {'allow_post': False, 'allow_put': False,
+          'policy_target_groups': {'allow_post': False, 'allow_put': False,
                               'validate': {'type:uuid_list': None},
                               'convert_to': attr.convert_none_to_empty_list,
                               'default': None, 'is_visible': True},
@@ -773,12 +774,12 @@ using attribute extension:
 .. code-block:: python
 
   EXTENDED_ATTRIBUTES_2_0 = {
-      gpolicy.ENDPOINTS: {
+      gpolicy.POLICY_TARGETS: {
           'neutron_port_id': {'allow_post': True, 'allow_put': False,
                               'validate': {'type:uuid_or_none': None},
                               'is_visible': True, 'default': None},
       },
-      gpolicy.ENDPOINT_GROUPS: {
+      gpolicy.POLICY_TARGET_GROUPS: {
           'neutron_subnets': {'allow_post': True, 'allow_put': True,
                               'validate': {'type:uuid_list': None},
                               'convert_to': attr.convert_none_to_empty_list,
@@ -801,7 +802,7 @@ Security impact
 ---------------
 
 The connectivity model used here is consistent with OpenStack/Neutron's current
-white list model - that is, there is no connectivity outside an EPG unless
+white list model - that is, there is no connectivity outside an PTG unless
 explicitly allowed.
 
 The rendering of the proposed new abstractions happens via existing Security
@@ -890,6 +891,8 @@ Assignee(s)
 
   Mandeep Dhami (mandeep-dhami)
 
+  Ivar Lazzaro (mmaleckk)
+
   Mohammad Banikazemi (banix)
 
   Stephen Wong (s3wong)
@@ -899,6 +902,8 @@ Assignee(s)
   Hemanth Ravi (hemanth-ravi)
 
   Subrahmanyam Ongole (osms69)
+
+  Magesh GV (magesh-gv)
 
   Ronak Shah (ronak-malav-shah)
 
