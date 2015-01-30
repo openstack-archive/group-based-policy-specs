@@ -8,9 +8,17 @@ Juno approved specs:
 
 .. toctree::
    :glob:
-   :maxdepth: 2
+   :maxdepth: 1
 
    specs/juno/*
+
+Kilo approved specs:
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+
+   specs/kilo/*
 
 ==================
 Indices and tables
