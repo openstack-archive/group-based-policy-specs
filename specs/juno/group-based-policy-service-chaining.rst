@@ -255,7 +255,7 @@ Other end user impact
    (configuration of service-chain-providers will be specific to
    service-chain-providers and is not in the scope of this BP).
 
-Performance Impact
+Performance impact
 ------------------
 
 No significant performance impact is expected.
@@ -291,7 +291,7 @@ framework:
 
   Sumit Naiksatam (snaiksat)
 
-Work Items
+Work items
 ----------
 
 1. Build API
@@ -310,7 +310,7 @@ Testing
 
 Unit Tests will be provided.
 
-Documentation Impact
+Documentation impact
 ====================
 
 Documentation will need to be updated for:

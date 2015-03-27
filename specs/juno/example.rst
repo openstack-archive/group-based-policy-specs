@@ -275,7 +275,7 @@ Aside from the API, are there other ways a user will interact with this feature?
 * Does this change have an impact on python client? What does the user
   interface there look like?
 
-Performance Impact
+Performance impact
 ------------------
 
 Describe any potential performance impact on the system, for example
@@ -349,7 +349,7 @@ Primary assignee:
 Other contributors:
   <launchpad-id or None>
 
-Work Items
+Work items
 ----------
 
 Work items or tasks -- break the feature up into the things that need to be
@@ -385,7 +385,7 @@ software configurations available)? If so, are there mitigation plans (3rd
 party testing, gate enhancements, etc).
 
 
-Documentation Impact
+Documentation impact
 ====================
 
 What is the impact on the docs team of this change? Some changes might require

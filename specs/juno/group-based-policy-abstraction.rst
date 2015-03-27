@@ -854,7 +854,7 @@ Integration with following projects will be required:
 * heat
 * devstack
 
-Performance Impact
+Performance impact
 ------------------
 
 A new layer of abstraction is being introduced. All performance considerations
@@ -912,7 +912,7 @@ Assignee(s)
 
   Kevin Benton (kevinbenton)
 
-Work Items
+Work items
 ----------
 
   Policy Manager
@@ -928,7 +928,7 @@ Testing
 
 Both, functional and, system tests will be added.
 
-Documentation Impact
+Documentation impact
 ====================
 
 Both, API and, Admin guide will be updated.

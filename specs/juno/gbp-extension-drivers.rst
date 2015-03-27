@@ -136,7 +136,7 @@ The python client will need to handle the possibility that different
 extensions are available based on which extension drivers are
 configured.
 
-Performance Impact
+Performance impact
 ------------------
 
 This blueprint should have minimal impact on performance. The GBP
@@ -170,7 +170,7 @@ Primary assignee:
 Other contributors:
   None
 
-Work Items
+Work items
 ----------
 
 * Port extension driver API and unit tests from ML2 to GBP, with
@@ -198,7 +198,7 @@ New unit tests will be added for the extension driver framework
 itself, and existing unit tests for the mapping will be updated to
 configure the required extension driver(s).
 
-Documentation Impact
+Documentation impact
 ====================
 
 Eventual GBP documentation will need to address configuring extension

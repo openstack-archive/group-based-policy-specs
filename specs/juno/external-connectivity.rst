@@ -307,7 +307,7 @@ Other end user impact
 The python client and the UI have to expose the new model
 to the end user.
 
-Performance Impact
+Performance impact
 ------------------
 
 None
@@ -334,7 +334,7 @@ Primary assignee:
 Other contributors:
   None
 
-Work Items
+Work items
 ----------
 
 - Database and API;
@@ -354,7 +354,7 @@ New unit tests will be added for the external connectivity extension
 itself, and existing unit tests for the mapping will be updated
 when needed.
 
-Documentation Impact
+Documentation impact
 ====================
 
 Eventual GBP documentation will need to address configuration

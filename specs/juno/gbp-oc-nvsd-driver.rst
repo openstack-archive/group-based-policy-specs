@@ -64,7 +64,7 @@ Other end user impact
 The driver will reuse the configuration for NVSD Neutron plugin [2] to access
 the NVSD controller.
 
-Performance Impact
+Performance impact
 ------------------
 
 This driver should allow for a more scalable solution of GBP deployments
@@ -92,7 +92,7 @@ Hemanth Ravi (hemanthravi)
 Subrahmanyam Ongole (songole)
 
 
-Work Items
+Work items
 ----------
 
 1. Developing the NVSD GBP driver
@@ -110,7 +110,7 @@ Unit tests will be provided.
 The 3rd party One Convergence CI setup will be enhanced to cover the
 testing of NVSD GBP driver using the NVSD controller.
 
-Documentation Impact
+Documentation impact
 ====================
 
 Documentation needs to be updated to reflect the addition of a new

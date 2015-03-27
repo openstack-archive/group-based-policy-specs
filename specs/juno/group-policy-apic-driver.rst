@@ -64,7 +64,7 @@ These parameters include the addresses, credentials, and any configuration
 required for accessing or using the APIC controller. Where possible, it
 will share the configuration with APIC ML2 driver.
 
-Performance Impact
+Performance impact
 ------------------
 
 This driver should allow for more efficient and scalable solution
@@ -92,7 +92,7 @@ Mandeep Dhami (mandeep-dhami)
 Ivar Lazzaro (mmaleckk)
 
 
-Work Items
+Work items
 ----------
 
 1. Developing the APIC GBP driver
@@ -111,7 +111,7 @@ Since access to an APIC controller is required for testing the
 proposed changes, 3rd party testing is required and will be
 provided by Cisco CI system.
 
-Documentation Impact
+Documentation impact
 ====================
 
 Documentation needs to be updated to reflect the addition of a new
