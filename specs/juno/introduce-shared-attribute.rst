@@ -174,7 +174,7 @@ Other end user impact
 The end user will now be able to see and consume
 shared resources.
 
-Performance Impact
+Performance impact
 ------------------
 
 This blueprint does not have significant impact on performance.
@@ -203,7 +203,7 @@ Primary assignee:
 Other contributors:
   None
 
-Work Items
+Work items
 ----------
 
 * Add resource attribute to REST API;
@@ -223,7 +223,7 @@ Testing
 Unit tests will be added to verify the resource visibility
 and usability.
 
-Documentation Impact
+Documentation impact
 ====================
 
 Eventual GBP documentation will need to provide explanations

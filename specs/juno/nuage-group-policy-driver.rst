@@ -61,7 +61,7 @@ Other end user impact
 
 None
 
-Performance Impact
+Performance impact
 ------------------
 
 This driver should allow for more efficient and scalable solution
@@ -91,7 +91,7 @@ Assignee(s)
 
 Ronak Shah (ronak-malav-shah)
 
-Work Items
+Work items
 ----------
 
 1. Developing the Nuage GBP driver
@@ -108,7 +108,7 @@ Testing
 Unit tests will be provided.
 Nuage CI may need to be enhanced to support this feature.
 
-Documentation Impact
+Documentation impact
 ====================
 
 Documentation needs to be updated to reflect the addition of a new

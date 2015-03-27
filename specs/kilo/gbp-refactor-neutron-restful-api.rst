@@ -35,7 +35,7 @@ This will be similar to how nova is doing it [2].
 2. Refactor resource mapping driver code to replace neutron neutron-plugin
 calls with the neutron v2 API calls.
 
-Alternative
+Alternatives
 ------------
 None.
 
@@ -61,7 +61,7 @@ Other end user impact
 ---------------------
 None.
 
-Performance Impact
+Performance impact
 ------------------
 There will be some minimal performance imapct after refactoring as RESTful
 APIs are used.
@@ -83,7 +83,7 @@ Yapeng Wu
 
 Yi Yang
 
-Work Items
+Work items
 ----------
 1. Add neutron v2 API module.
 2. In RMD, replace neutron-plugin calls with neutron v2 API calls.
@@ -114,7 +114,7 @@ When GBP becomes an independent server, the neutron-wsgi calls will being
 refactored. These refactor can be handled in the spec for the independent
 server.
 
-Documentation Impact
+Documentation impact
 ====================
 None
 

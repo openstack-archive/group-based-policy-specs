@@ -30,7 +30,7 @@ The proposed change will:
 
 2. Add a new ODL GBP Mechanism Driver for Neutron ML2 Plugin. Such a mechanism driver will provide a feedback loop to the ODL GBP Policy Mapping Driver to trigger policy target related operations when a VM is plugged into the Neutron port.
 
-Alternative
+Alternatives
 ------------
 There are no alternatives to leverage the native GBP API in ODL.
 
@@ -56,7 +56,7 @@ Other end user impact
 Users deploying OpenStack with the Group Based Policy extensions will be able to
 utilze these new APIs in conjunction with the Helium version of OpenDaylight.
 
-Performance Impact
+Performance impact
 ------------------
 No change here.
 
@@ -80,7 +80,7 @@ Stephen Wong (s3wong)
 YaPeng Wu
 Yi Yang
 
-Work Items
+Work items
 ----------
 1. Add an OpenDaylight policy mapping driver to support Group Based Policy APIs
 2. Add an OpenDaylight GBP Mechanism Driver for Neutron ML2 Plugin
@@ -93,7 +93,7 @@ Testing
 =======
 Additional unit tests will be added. Furthermore, ODL policy driver should be added as part of OpenStack GBP's CI system
 
-Documentation Impact
+Documentation impact
 ====================
 None
 

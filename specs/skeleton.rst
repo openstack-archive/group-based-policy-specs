@@ -41,7 +41,7 @@ Other end user impact
 ---------------------
 
 
-Performance Impact
+Performance impact
 ------------------
 
 
@@ -60,7 +60,7 @@ Assignee(s)
 -----------
 
 
-Work Items
+Work items
 ----------
 
 
@@ -72,7 +72,7 @@ Testing
 =======
 
 
-Documentation Impact
+Documentation impact
 ====================
 
 

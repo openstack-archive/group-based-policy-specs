@@ -45,6 +45,46 @@ Alternatives
 
 None
 
+Data model impact
+-----------------
+
+None
+
+REST API impact
+---------------
+
+None
+
+Security impact
+---------------
+
+None
+
+Notifications impact
+--------------------
+
+None
+
+Other end user impact
+---------------------
+
+None
+
+Performance impact
+------------------
+
+None
+
+Other deployer impact
+---------------------
+
+None
+
+Developer impact
+----------------
+
+None
+
 Implementation
 ==============
 
@@ -53,7 +93,7 @@ Assignee(s)
 
 Susaant Kondapaneni (susaant)
 
-Work Items
+Work items
 ----------
 
 1. Implement resources for Endpoint, EndpointGroup, L3Policy and L2Policy
@@ -65,3 +105,18 @@ Dependencies
 ============
 
 - [1] Group-based policy abstractions: https://review.openstack.org/#/c/123494
+
+Testing
+=======
+
+None
+
+Documentation impact
+====================
+
+None
+
+References
+==========
+
+None

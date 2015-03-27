@@ -9,47 +9,47 @@ Title of your blueprint
 ==========================================
 
 
-Problem Description
+Problem description
 ===================
 
 
-Proposed Change
+Proposed change
 ===============
 
 
-Data Model Impact
+Data model impact
 -----------------
 
 
-REST API Impact
+REST API impact
 ---------------
 
 
-Security Impact
+Security impact
 ---------------
 
 
-Notifications Impact
+Notifications impact
 --------------------
 
 
-Other End User Impact
+Other end user impact
 ---------------------
 
 
-Performance Impact
+Performance impact
 ------------------
 
 
-Other Deployer Impact
+Other deployer impact
 ---------------------
 
 
-Developer Impact
+Developer impact
 ----------------
 
 
-Community Impact
+Community impact
 ----------------
 
 
@@ -64,7 +64,7 @@ Assignee(s)
 -----------
 
 
-Work Items
+Work items
 ----------
 
 
@@ -87,7 +87,7 @@ API Tests
 ---------
 
 
-Documentation Impact
+Documentation impact
 ====================
 
 User Documentation
