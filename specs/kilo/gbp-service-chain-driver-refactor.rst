@@ -38,7 +38,8 @@ At a high level the following changes are proposed:
    on their profile;
 
 4.1. The plumbing info of all the scheduled nodes will be used by the
-     NCP for traffic stitching/steering. This will be a pluggable module.
+     NCP for traffic stitching/steering. This will be a pluggable module
+     (NodePlumber).
 
 5. Define Service Configuration and Management driver interface;
 
@@ -53,45 +54,58 @@ hierarchy:
 
 asciiflow::
 
- +--------------------------------------+              +---------------------------+
- |NodeComposPlugin(ServiceChainDbPlugin)|              |      NodeDriverBase       |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |1            N|                           |
- |                                      +--------------+                           |
- +--------------------------------------+              +---------------------------+
- | *create       *update      *delete   |              | *get_plumbing_info()      |
- |    *SCI          *SCI         *SCI   |              | *validate(NodeContext)    |
- |    *SCS          *SCS         *SCS   |              | *create(NodeContext)      |
- |    *SCN          *SCN         *SCN   |              | *delete(NodeContext)      |
- +--------------------------------------+              | *update(NodeContext)      |
-                                                       +----^--------^--------^----+
- +--------------------------------------+                   |        |        |
- |            NodeContext               |                   |        |        |
- |                                      |          +--------+----+   |   +----+--------+
- | *core plugin                         |          |             |   |   |             |
- | *sc plugin                           |          | Nova        |   |   | Neutron     |
- | *provider ptg                        |          | Node        |   |   | Node        |
- | *consumer ptg                        |          | Driver      |   |   | Driver      |
- | *policy target(s)                    |          |             |   |   |             |
- | *management ptg                      |          |             |   |   |             |
- | *ser^ice chain instance              |          +-----^-------+   |   +------^------+
- | *service chain node                  |                |           |          |
- | *service chain spec                  |                |           |          |
- +--------------------------------------+                |           |          |
- |                                      |          +-----+----+ +----+---+ +----+-----+
- | *get/update/delete service targets   |          | SC Node  | | SC Node| | SC Node  |
- |                                      |          | Driver   | | Driver | | Driver   |
- +--------------------------------------+          +----------+ +--------+ +----------+
+ +--------------------------------------+      +-----------------------------------------+
+ |NodeComposPlugin(ServiceChainDbPlugin)|      |      NodeDriverBase                     |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |1    N|                                         |
+ |                                      +------+                                         |
+ +--------------------------------------+      +-----------------------------------------+
+ | *create       *update      *delete   |      | *get_plumbing_info()                    |
+ |    *SCI          *SCI         *SCI   |      | *validate(NodeContext)                  |
+ |    *SCS          *SCS         *SCS   |      | *create(NodeContext)                    |
+ |    *SCN          *SCN         *SCN   |      | *delete(NodeContext)                    |
+ +-----------------+--------------------+      | *update(NodeContext)                    |
+                   |                           | *update_policy_target_added(NContext,PT)|
+ +-----------------+--------------------+      | *update_policy_target_removed(...)      |
+ |NodePlumber                           |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ +--------------------------------------+      |                                         |
+ |                                      |      +---------^----------^----------^---------+
+ | *plug_services(NContext,Deployment)  |                |          |          |
+ | *unplug_services(NContext,Deployment)|                |          |          |
+ |                                      |         +------+------+   |   +------+------+
+ +--------------------------------------+         |             |   |   |             |
+                                                  | Nova        |   |   | Neutron     |
+ +--------------------------------------+         | Node        |   |   | Node        |
+ |            NodeContext               |         | Driver      |   |   | Driver      |
+ |                                      |         |             |   |   |             |
+ | *core plugin                         |         |             |   |   |             |
+ | *sc plugin                           |         +-----^-------+   |   +------^------+
+ | *provider ptg                        |               |           |          |
+ | *consumer ptg                        |               |           |          |
+ | *policy target(s)                    |               |           |          |
+ | *management ptg                      |         +-----+----+ +----+---+ +----+-----+
+ | *service chain instance              |         | SC Node  | | SC Node| | SC Node  |
+ | *service chain node                  |         | Driver   | | Driver | | Driver   |
+ | *service chain spec                  |         +----------+ +--------+ +----------+
+ +--------------------------------------+
+ |                                      |
+ | *get/update/delete service targets   |
+ |                                      |
+ +--------------------------------------+
 
 
 Node Driver Base
 This supports operations for CRUD of a service, and to query the number of
 data-path and management interfaces required for this service.
+Also supports call backs for auto-scaling in case of added/removed PTs
+on a relevant PTG.
 
 Node Context
 Provides useful attributes and methods for the Node Driver to use.
@@ -118,6 +132,24 @@ services.
 Node Driver
 This configures the service based on the “config” provided in the Service
 Node definition.
+
+Node Plumber
+The node plumber is an entity which takes care of plumbing nodes in a
+chain. By node plumbing is intended the creation/disruption of the
+appropriate Neutron and GBP constructs (typically Ports and Policy Targets)
+based on the specific Node needs, taking into account the whole service
+chain in the process. Ideally, this module will ensure that the traffic
+flows as expected according to the user intent.
+
+Deployment (input parameter in plug and unplug services methods)
+A deployment is a list composed as follows:
+ [{'context': node_context,
+  'driver': deploying_driver,
+  'plumbing_info': node_plumbing_needs},
+   ...]
+No assumptions should be made on the order of the nodes as received in
+the deployment, but it can be retrieved by calling node_context.current_position
+
 
 Data model impact
 -----------------
