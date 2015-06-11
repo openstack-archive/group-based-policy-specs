@@ -37,12 +37,13 @@ At a high level the following changes are proposed:
    destroying and updating Service Chain Node instances depending
    on their profile;
 
-4.1. The plumbing info of all the scheduled nodes will be used by the
-     NCP for traffic stitching/steering. This will be a pluggable module.
+5. The plumbing info of all the scheduled nodes will be used by the
+   NCP for traffic stitching/steering. This will be a pluggable module
+   (NodePlumber);
 
-5. Define Service Configuration and Management driver interface;
+6. Define Service Configuration and Management driver interface;
 
-6. Implement 2 reference implementations of Node Drivers.
+7. Implement 2 reference implementations of Node Drivers.
    They will use Nova (for NFV) and Neutron in the backend.
 
 The relationship between the Services Plugin and Node Drivers is as shown below:
@@ -53,45 +54,62 @@ hierarchy:
 
 asciiflow::
 
- +--------------------------------------+              +---------------------------+
- |NodeComposPlugin(ServiceChainDbPlugin)|              |      NodeDriverBase       |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |              |                           |
- |                                      |1            N|                           |
- |                                      +--------------+                           |
- +--------------------------------------+              +---------------------------+
- | *create       *update      *delete   |              | *get_plumbing_info()      |
- |    *SCI          *SCI         *SCI   |              | *validate(NodeContext)    |
- |    *SCS          *SCS         *SCS   |              | *create(NodeContext)      |
- |    *SCN          *SCN         *SCN   |              | *delete(NodeContext)      |
- +--------------------------------------+              | *update(NodeContext)      |
-                                                       +----^--------^--------^----+
- +--------------------------------------+                   |        |        |
- |            NodeContext               |                   |        |        |
- |                                      |          +--------+----+   |   +----+--------+
- | *core plugin                         |          |             |   |   |             |
- | *sc plugin                           |          | Nova        |   |   | Neutron     |
- | *provider ptg                        |          | Node        |   |   | Node        |
- | *consumer ptg                        |          | Driver      |   |   | Driver      |
- | *policy target(s)                    |          |             |   |   |             |
- | *management ptg                      |          |             |   |   |             |
- | *ser^ice chain instance              |          +-----^-------+   |   +------^------+
- | *service chain node                  |                |           |          |
- | *service chain spec                  |                |           |          |
- +--------------------------------------+                |           |          |
- |                                      |          +-----+----+ +----+---+ +----+-----+
- | *get/update/delete service targets   |          | SC Node  | | SC Node| | SC Node  |
- |                                      |          | Driver   | | Driver | | Driver   |
- +--------------------------------------+          +----------+ +--------+ +----------+
+ +--------------------------------------+      +-----------------------------------------+
+ |NodeComposPlugin(ServiceChainDbPlugin)|      |      NodeDriverBase                     |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ |                                      |1    N|                                         |
+ |                                      +------+                                         |
+ +--------------------------------------+      +-----------------------------------------+
+ | *create       *update      *delete   |      | *get_plumbing_info()                    |
+ |    *SCI          *SCI         *SCI   |      | *validate_create(NodeContext)           |
+ |    *SCS          *SCS         *SCS   |      | *validate_update(NodeContext)           |
+ |    *SCN          *SCN         *SCN   |      | *create(NodeContext)                    |
+ +-----------------+--------------------+      | *delete(NodeContext)                    |
+                   |                           | *update(NodeContext)                    |
+ +-----------------+--------------------+      | *update_policy_target_added(NContext,PT)|
+ |NodePlumber                           |      | *update_policy_target_removed(...)      |
+ |                                      |      |                                         |
+ |                                      |      |                                         |
+ +--------------------------------------+      |                                         |
+ |                                      |      +---------v----------v----------v---------+
+ | *plug_services(NContext,Deployment)  |                |          |          |
+ | *unplug_services(NContext,Deployment)|                |          |          |
+ |                                      |         +------+------+   |   +------+------+
+ +--------------------------------------+         |             |   |   |             |
+                                                  | Nova        |   |   | Neutron     |
+ +--------------------------------------+         | Node        |   |   | Node        |
+ |            NodeContext               |         | Driver      |   |   | Driver      |
+ |                                      |         |             |   |   |             |
+ | *core plugin                         |         |             |   |   |             |
+ | *sc plugin                           |         +-----v-------+   |   +------v------+
+ | *provider ptg                        |               |           |          |
+ | *consumer ptg                        |               |           |          |
+ | *policy target(s)                    |               |           |          |
+ | *management ptg                      |         +-----+----+ +----+---+ +----+-----+
+ | *service chain instance              |         | SC Node  | | SC Node| | SC Node  |
+ | *service chain node                  |         | Driver   | | Driver | | Driver   |
+ | *service chain spec                  |         +----------+ +--------+ +----------+
+ | *service_targets                     |
+ | *l3_plugin                           |
+ | *gbp_plugin                          |
+ |                                      |
+ +--------------------------------------+
+ |                                      |
+ |                                      |
+ +--------------------------------------+
 
 
 Node Driver Base
 This supports operations for CRUD of a service, and to query the number of
 data-path and management interfaces required for this service.
+Also supports call backs for notifications on added and removed Policy Targets
+on a relevant PTG. This can be used for example to support auto-scaling by
+adding new members to a loadbalancer pool.
 
 Node Context
 Provides useful attributes and methods for the Node Driver to use.
@@ -119,6 +137,36 @@ Node Driver
 This configures the service based on the “config” provided in the Service
 Node definition.
 
+Node Plumber
+The Node Plumber is a pluggable module that performs the network orchestration
+required to insert the service nodes, and plumb traffic to them per the user's
+intent captured in the service chain specification. It achieves this by creating
+the appropriate Neutron and GBP constructs (e.g. Ports, Networks, Policy Targets,
+Policy Target Groups) based on the requirements of the Node Driver and in the
+context of realizing the Service Chain.
+
+Deployment (input parameter in plug and unplug services methods)
+A deployment is a list composed as follows::
+
+ [{'context': node_context,
+  'driver': deploying_driver,
+  'plumbing_info': node_plumbing_needs},
+   ...]
+
+The position of a given node in the service chain can be retrieved by the Node Driver
+using node_context.current_position
+
+Management Policy Target Group
+A PTG can be marked for service management by setting the newly added "service_management"
+attribute to True. In the default policy.json this operation can be only done by an Admin,
+who can create (and only one) Management PTG per tenant plus a globally shared one.
+Whenever a SCI is created the NCP will first look for an existing Management PTG on the SCI
+owner tenant. If none, the NCP plugin will query for an existing shared PTG, which could potentially
+belong to any tenant (typically one with admin capabilities). If no Management PTG is found, the
+service instantiation will proceed without it and it's the Node Driver's duty to refuse a service
+instantiation if it requires a Management PTG.
+
+
 Data model impact
 -----------------
 
@@ -142,6 +190,12 @@ Service Profile
 Service Chain Node
   * REMOVE service_type
   * service_profile_id - SP UUID
+
+Policy Target Group
+  * service_management - bool (default False)
+
+Service Chain Instance
+  * management_ptg_id - PTG UUID
 
 REST API impact
 ---------------
@@ -187,6 +241,25 @@ The following is added to servicechain node::
                              'validate': {'type:uuid': None},
                              'required': True, 'is_visible': True},
   }
+
+The following is added to policy target group::
+
+ POLICY_TARGET_GROUPS: {
+      'service_management': {'allow_post': True, 'allow_put': True,
+                             'default': False,
+                             'convert_to': attr.convert_to_boolean,
+                             'is_visible': True, 'required_by_policy': True,
+                             'enforce_policy': True},
+ }
+
+The following is added to service chain isntance::
+
+ SERVICECHAIN_INSTANCES: {
+     'management_ptg_id': {'allow_post': True, 'allow_put': False,
+                           'validate': {'type:uuid_or_none': None},
+                           'is_visible': True, 'default': None,
+                           'required': True}
+ }
 
 Security impact
 ---------------
