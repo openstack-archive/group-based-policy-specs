@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+2: Robert Kukura <kukura@noironetworks.com>
+Code-Review+1: Igor Duarte Cardoso <igordcard@gmail.com>
+Code-Review+2: Magesh GV <mageshgv@gmail.com>
+Workflow+1: Magesh GV <mageshgv@gmail.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 11 Jun 2015 17:18:27 +0000
+Reviewed-on: https://review.openstack.org/187407
+Project: stackforge/group-based-policy-specs
+Branch: refs/heads/master
