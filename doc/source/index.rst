@@ -36,6 +36,14 @@ Mitaka approved specs:
 
    specs/mitaka/*
 
+Newton approved specs:
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+
+   specs/newton/*
+
 ==================
 Indices and tables
 ==================
