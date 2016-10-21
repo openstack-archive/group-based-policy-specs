@@ -31,8 +31,8 @@ So, QoS policies cannot be applied to specific classifications of traffic.
 
 There are 2 major places to apply QoS in GBP: Within a PTG and Across PTGs.
 GBP already has a Policy Action Type "QoS" expressed through the Horizon
-dashboard [2] - this would be the the "Across PTGs" scenario - but no
-underlying implementation on the server to back it up.
+dashboard [2] - this would be the "Across PTGs" scenario - but no underlying
+implementation on the server to back it up.
 
 As part of an initial QoS support in GBP, it is achievable to have QoS within
 PTGs, i.e. to configure QoS rules for Policy Targets, since they map back to
