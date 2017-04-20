@@ -30,37 +30,68 @@ Proposed change
 The current mapping of GBP l3_policy to a list of Neutron routers will be
 augmented with the mapping to a Neutron address_scope (one each for IPv4 and
 IPv6) and subnetpools. This spec attempts to lay the foundation for the use
-of IPv6, and dual-stack (both IPv4 and IPv6) in the l3_policy. The API and DB
-model constructs to support this are being addressed in this spec. The details
-for IPv6 implementation are not addresed in this spec and will be laid out in
-a forthcoming complementary spec.
+of IPv6 and dual-stack (both IPv4 and IPv6) in the l3_policy. The API and DB
+model constructs to support this are addressed in this spec.
 
-For each address family (IPv4 and/or IPv6) the l3_policy supports, there will
-be a 1-1 mapping between GBP l3_policy and the Neutron address_scope,
-and 1-many mapping between GBP l3_policy and Neutron subnetpools. The 1-many
+The ip_version attribute of GBP's l3_policy is extended to allow specifying
+dual-stack support. Currently allowed values for ip_version are 4 for IPv4
+and 6 for IPv6. Either 46 or 64 may now be used to indicate dual-stack support.
+
+For each address family (IPv4 and/or IPv6) supported by an l3_policy, there
+will be a 1-1 mapping between GBP l3_policy and the Neutron address_scope,
+and a 1-many mapping between GBP l3_policy and Neutron subnetpools. The 1-many
 mapping allows for use cases where the l3_policy (and address_scope) is shared
 across tenants, while the subnetpool is created per tenant and not shared.
 
-The subnetpools that are explicitly associated with the l3_policy, need to
-belong to the same address_scope that is associated with that l3_policy. GBP
-will allocate subnets only from the subnetpools that are associated with the
-corresponding l3_policy. The list of subnets associated with the l3_policy can
-be updated by adding or removing subnetpools (subnetpools which are currently
-being used cannot be removed).
+Within an address family, the subnetpools that are explicitly associated with
+the l3_policy must all belong to the same address_scope. GBP will allocate
+subnets only from the subnetpools that are associated with the corresponding
+l3_policy. The list of subnets associated with the l3_policy can be updated
+by adding or removing subnetpools (subnetpools which are currently being used
+cannot be removed).
+
+The implicit subnetpools extension is used to control the desired behavior
+when an implicit workflow is used with L3 policies [#]_. Implicit subnetpools
+are only used when the ip_version requests a given address family (IPv4 or
+IPv6) and the user hasn't explicitly provided a subnetpool and/or address
+scope for that address family. The existing implicit subnetpool semantics
+must be amended to account for a subnetpool per address family:
+- Only one implicit subnetpool *per address family* can exist *per tenant*
+  (if not shared)
+- Only one shared implicit subnetpool *per address family* can exist in the
+  whole system.  This doesn't affect private implicit subnetpools
+
+Two properties of address scopes are address namespace and routability.
+Address namespace simply means that addresses are guaranteed to be unique
+within an address scope. Routability means that neutron routers may only
+forward between interfaces that have subnets which were allocated from
+subnetpools with the same address scope (note: forwarding is still possible
+via NAT when they aren't in the same scope). It's worth pointing out that
+since address scopes can span an l3_policy, the address uniqueness is
+applied across the l3_policies, but routability is only applied within
+each l3_policy (because neutron routers are tied to a single l3_policy)..
 
 Let's consider the various combinations that are possible based on the choice
 of implicit and explicit arguments.
 
 #. A l3_policy is created with an ip_pool, ip_version, and
-   subnet_prefix_length but no address_scope or subnetpool(s) are provided. In
-   this case an address_scope with the address family of the ip_version will be
-   created implicitly, and a subnetpool with the ip_pool CIDR will be created
-   in that address_scope. If the l3_policy is shared, the implcitily create
+   subnet_prefix_length but no address_scope or subnetpool(s) are provided.
+   There are two possibilities in this scenario:
+     *  An implicit subnetpool exists for the given ip_version
+        In this case the implicit subnetpool and its address scope are
+        associated witht he l3_policy.
+     *  An implicit subnetpool does not exist for the given ip_version
+        In this case an address_scope with the address family of the ip_version
+        will be created, and a subnetpool with the ip_pool CIDR will be created
+        in that address_scope.
+   In both cases, if the l3_policy is shared, the implcitily created
    address_scope and subnetpool will also be shared. The ip_version of the
    l3_policy will be used for the address_scope and the subnetpool. The
    default_prefixlen, will be set to the subnet_prefix_length of the l3_policy.
-   (The min_prefixlen, and max_prefixlen of the subnetpool will default to 8
-   and 32 as defined in Neutron.)
+   (for IPv4, the min_prefixlen and max_prefixlen of the subnetpool will
+   default to 8 and 32, respectively, as defined in Neutron. For IPv6, the
+   min_prefixlen and max_prefixlen of the subnetpool will default to 64 and
+   ? respectively, as defined in Neutron).
 
 #. A l3_policy is created with an ip_pool, ip_version, subnet_prefix_length,
    and address_scope, but no subnetpools are provided. In this case the
@@ -202,6 +233,10 @@ extension definition
                     'validate': {'type:uuid_list': None},
                     'convert_to': attr.convert_none_to_empty_list,
                     'is_visible': True, 'default': None},
+        'ip_version': {'allow_post': True, 'allow_put': False,
+                       'convert_to': conv.convert_to_int,
+                       'validate': {'type:values': [4, 6, 46, 64]},
+                       'default': 4, 'is_visible': True},
     },
 
 
@@ -320,3 +355,4 @@ References
 ==========
 
 .. [#] http://docs.openstack.org/developer/neutron/devref/address_scopes.html
+.. [#] https://review.openstack.org/#/c/419315/
