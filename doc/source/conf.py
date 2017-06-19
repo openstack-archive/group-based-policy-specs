@@ -12,9 +12,10 @@
 # serve to show the default.
 
 import datetime
-import os
 import subprocess
 import sys
+import os
+import warnings
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -137,9 +138,11 @@ html_theme = 'nature'
 # using the given strftime format.
 git_cmd = ["git", "log", "--pretty=format:'%ad, commit %h'", "--date=local -",
    "n1"]
-html_last_updated_fmt = subprocess.Popen(git_cmd,
-                                         stdout=subprocess.PIPE).\
-                                         communicate()[0]
+try:
+    html_last_updated_fmt = subprocess.check_output(git_cmd).decode('utf-8')
+except Exception:
+    warnings.warn('Cannot get last updated time from git repository. '
+                  'Not setting "html_last_updated_fmt".')
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
