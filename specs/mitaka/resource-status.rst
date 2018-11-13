@@ -245,5 +245,5 @@ References
 
 .. [#] https://bugs.launchpad.net/group-based-policy/+bug/1479706
 .. [#] https://github.com/openstack/neutron/blob/master/neutron/common/constants.py#L18-L26
-.. [#] http://docs.openstack.org/developer/nova/vmstates.html
+.. [#] https://docs.openstack.org/developer/nova/vmstates.html
 .. [#] https://blueprints.launchpad.net/group-based-policy/+spec/async-policy-driver

@@ -212,6 +212,6 @@ References
   https://blueprints.launchpad.net/neutron/+spec/extensions-in-ml2
 
 * ML2 extension driver specification:
-  http://git.openstack.org/cgit/openstack/neutron-specs/tree/specs/juno/neutron-ml2-mechanismdriver-extensions.rst
+  https://git.openstack.org/cgit/openstack/neutron-specs/tree/specs/juno/neutron-ml2-mechanismdriver-extensions.rst
 
 * ML2 extension driver code review: https://review.openstack.org/#/c/89211/

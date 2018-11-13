@@ -459,5 +459,5 @@ Devref document will be added.
 References
 ==========
 
-.. [#] http://docs.openstack.org/developer/neutron/devref/address_scopes.html
+.. [#] https://docs.openstack.org/developer/neutron/devref/address_scopes.html
 .. [#] https://review.openstack.org/#/c/282021/

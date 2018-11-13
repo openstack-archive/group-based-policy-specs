@@ -99,5 +99,5 @@ None
 
 References
 ==========
-http://git.openstack.org/cgit/stackforge/group-based-policy-specs/tree/specs/juno/group-based-policy-abstraction.rst
+https://git.openstack.org/cgit/stackforge/group-based-policy-specs/tree/specs/juno/group-based-policy-abstraction.rst
 https://wiki.opendaylight.org/view/Group_Policy:Main

@@ -121,7 +121,7 @@ None
 References
 ==========
 [1]
-http://git.openstack.org/cgit/stackforge/group-based-policy-specs/tree/specs/juno/group-based-policy-abstraction.rst
+https://git.openstack.org/cgit/stackforge/group-based-policy-specs/tree/specs/juno/group-based-policy-abstraction.rst
 [2] https://github.com/openstack/nova/tree/master/nova/network/neutronv2
 [3] https://github.com/stackforge/group-based-policy/blob/master/gbpservice/neutron/tests/unit/services/grouppolicy/test_resource_mapping.py#L317
 [4] https://github.com/stackforge/group-based-policy/blob/master/gbpservice/neutron/tests/unit/services/grouppolicy/test_resource_mapping.py#L339

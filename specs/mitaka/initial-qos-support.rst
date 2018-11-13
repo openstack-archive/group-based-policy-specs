@@ -237,5 +237,5 @@ Developer Documentation
 References
 ==========
 [1] https://specs.openstack.org/openstack/neutron-specs/specs/liberty/qos-api-extension.html
-[2] http://git.openstack.org/cgit/openstack/group-based-policy-ui/tree/gbpui/panels/application_policy/forms.py
+[2] https://git.openstack.org/cgit/openstack/group-based-policy-ui/tree/gbpui/panels/application_policy/forms.py
 

@@ -159,4 +159,4 @@ References
 ==========
 
 [0] https://github.com/stackforge/group-based-policy-specs/blob/master/specs/kilo/gbp-service-chain-driver-refactor.rst
-[1] http://specs.openstack.org/openstack/neutron-specs/specs/api/allowed_address_pairs.html
+[1] https://specs.openstack.org/openstack/neutron-specs/specs/api/allowed_address_pairs.html
